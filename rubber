@@ -1,0 +1,118 @@
+#!/usr/bin/python
+#
+#   This hacky little script wraps an HTTP request in proxy protocol and outputs the response.
+#   Run with -h flag for usage. This is a nice script to use when performing health checks on
+#   servers that require proxy protocol. Using [-s|--status-code] we will receive the response
+#   status code back. Ex:
+#
+#   ./pp GET http://server:8080/health --status-code
+#
+#   Note: Does not yet support POST or PUT as it does not yet send data with request.
+#
+#   TODO: Support easier retrieval of status code only via an option.
+#
+
+import argparse
+from urlparse import urlparse
+import socket
+import ssl
+import json
+
+SUPPORTED_VERBS = ["POST", "PUT", "GET", "DELETE"]
+
+
+class ProxyProtocolWrapper(object):
+    def __init__(self, **kwargs):
+        self._process_url(kwargs.get("url"), kwargs.get("source"), kwargs.get("port"), kwargs.get("dport"))
+        self.verbose = kwargs.get("verbose")
+        self.send_proxy = kwargs.get("no_proxy") == False
+        self.data = kwargs.get("data")
+        self.verb = kwargs.get("verb")
+        self.status_code = kwargs.get("status_code")
+
+        if self.verb not in SUPPORTED_VERBS:
+            print "Unsupported verb used. Defaulting to GET."
+            self.verb = "GET"
+
+    def _process_url(self, url, source=None, port=None, dport=None):
+        """ Processes source and destination host and port info. """
+        self.url = urlparse(url)
+        self.path = self.url.path
+        if not self.path:
+            self.path = "/"
+        self.port = self._default_port(port)
+        self.dest_host, self.dport = self.url.netloc.split(":")
+
+        if not self.dport:
+            self.dport = dport._default_port(dport)
+        self.source = source
+
+        if not source:
+            self.source = "127.0.0.1"
+
+    def _default_port(self, port=None):
+        """ Defaults a port in order of priority. This makes using this tool more flexible. """
+
+        scheme_port = {"http": 80, "https": 443}.get(self.url.scheme)
+        if not port:
+            if not scheme_port:
+                # Arbitrary default if nothing is set
+                port = 80
+            else:
+                port = scheme_port
+        return port
+
+    def _proxy_request(self):
+        """ Generates the proxy protocol string """
+
+        data = map(str, ("PROXY", "TCP4", self.source, self.dest_host, self.port, self.dport))
+        return ' '.join(data) + '\r\n'
+
+    def _connect(self):
+        """
+            Creates the TCP connection, sends the proxy protocol string then
+            upgrades the socket to SSL if necessary.
+        """
+
+        self.connection = socket.create_connection((self.dest_host, self.dport))
+
+        if self.send_proxy:
+            self.connection.send(self._proxy_request())
+
+        if self.url.scheme == "https":
+            self.connection = ssl.wrap_socket(self.connection)
+
+    def request(self):
+        self._connect()
+        request = "{0} {1} HTTP/1.0\r\n\r\n".format(self.verb.upper(), self.path)
+        self.connection.send(request)
+
+        response = ""
+        while True:
+            part = self.connection.recv(10)
+            if not part:
+                break
+            else:
+                response += part
+        self.connection.close()
+
+        if self.status_code:
+            response = response.split(" ")[1]
+
+        return response
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("verb", type=str, action="store", help="HTTP verb, Supported: GET, POST, PUT, and DELETE")
+parser.add_argument("url", type=str, action="store", help="URL to send request to")
+parser.add_argument("-s", "--status-code", action="store_true", help="Pass option to have only the status code returned")
+parser.add_argument("--source", type=str, action="store", help="Souce host for proxy")
+parser.add_argument("-p", "--port", type=int, action="store", help="Destination port to communicate on")
+parser.add_argument("--dport", type=int, action="store", help="Source port for proxy")
+parser.add_argument("-d", "--data", type=str, action="store", help="Data to send with the http request.")
+parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output while making request")
+parser.add_argument("-n", "--no-proxy", action="store_true", help="Send request without proxy protocol")
+args = vars(parser.parse_args())
+
+proxy_wrapper = ProxyProtocolWrapper(**args)
+print proxy_wrapper.request()
