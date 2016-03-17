@@ -5,11 +5,10 @@
 #   servers that require proxy protocol. Using [-s|--status-code] we will receive the response
 #   status code back. Ex:
 #
-#   ./pp GET http://server:8080/health --status-code
+#   ./rubber GET http://server:8080/health --status-code
 #
 #   Note: Does not yet support POST or PUT as it does not yet send data with request.
 #
-#   TODO: Support easier retrieval of status code only via an option.
 #
 
 import argparse
