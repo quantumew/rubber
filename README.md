@@ -10,21 +10,32 @@ This is a somewhat hacky script that wraps an http request in proxy protocol. I 
 rubber <verb> <url> [options]
 ```
 
+###Example
+
+```
+rubber GET http://test.com:8080/health --status-code
+```
+
 ###positional arguments:
-*  verb                  HTTP verb, Supported: GET, POST, PUT, and DELETE
-*  url                   URL to send request to
+*  VERB
+    * HTTP verb, Supported: GET, POST, PUT, and DELETE
+*  URL
+    * URL to send request to
 
 ###optional arguments:
-*  -h, --help            Show this help message and exit
-*  -s, --status-code     Return only the http response status code
-*  --source SOURCE       Souce host for proxy
-*  -p PORT, --port PORT  Destination port to communicate on
-*  --dport DPORT         Source port for proxy
-*  -d DATA, --data DATA  Data to send with the http request
-*  -v, --verbose         Verbose output while making request
-*  -n, --no-proxy        Send request without proxy protocol
-
-#Installation
-```
-
-```
+*  Show help message and exit
+    * -h | --help
+* Return only the http response status code
+    * -s, --status-code
+* Souce host for proxy
+    * --source SOURCE-HOST
+* Destination port to communicate on. This can alternatively be set with url, ie. localhost:8080
+    * -p | --port PORT
+* Source port for proxy.
+    * --source-port PORT
+* Data to send with HTTP request.
+    * -d | --data DATA
+* Verbose output while making request
+    * -v | --verbose
+* Send request without proxy protocol. WHY ARE YOU EVEN USING THIS SCRIPT LOL!!
+    * -n | --no-proxy

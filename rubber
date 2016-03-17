@@ -23,7 +23,7 @@ SUPPORTED_VERBS = ["POST", "PUT", "GET", "DELETE"]
 
 class ProxyProtocolWrapper(object):
     def __init__(self, **kwargs):
-        self._process_url(kwargs.get("url"), kwargs.get("source"), kwargs.get("port"), kwargs.get("dport"))
+        self._process_url(kwargs.get("url"), kwargs.get("source"), kwargs.get("port"), kwargs.get("source_port"))
         self.verbose = kwargs.get("verbose")
         self.send_proxy = kwargs.get("no_proxy") == False
         self.data = kwargs.get("data")
@@ -34,17 +34,17 @@ class ProxyProtocolWrapper(object):
             print "Unsupported verb used. Defaulting to GET."
             self.verb = "GET"
 
-    def _process_url(self, url, source=None, port=None, dport=None):
+    def _process_url(self, url, source=None, port=None, source_port=None):
         """ Processes source and destination host and port info. """
         self.url = urlparse(url)
         self.path = self.url.path
         if not self.path:
             self.path = "/"
-        self.port = self._default_port(port)
-        self.dest_host, self.dport = self.url.netloc.split(":")
+        self.source_port = self._default_port(source_port)
+        self.dest_host, self.port = self.url.netloc.split(":")
 
-        if not self.dport:
-            self.dport = dport._default_port(dport)
+        if not self.port:
+            self.port = self._default_port(port)
         self.source = source
 
         if not source:
@@ -65,7 +65,7 @@ class ProxyProtocolWrapper(object):
     def _proxy_request(self):
         """ Generates the proxy protocol string """
 
-        data = map(str, ("PROXY", "TCP4", self.source, self.dest_host, self.port, self.dport))
+        data = map(str, ("PROXY", "TCP4", self.source, self.dest_host, self.source_port, self.port))
         return ' '.join(data) + '\r\n'
 
     def _connect(self):
@@ -74,7 +74,7 @@ class ProxyProtocolWrapper(object):
             upgrades the socket to SSL if necessary.
         """
 
-        self.connection = socket.create_connection((self.dest_host, self.dport))
+        self.connection = socket.create_connection((self.dest_host, self.port))
 
         if self.send_proxy:
             self.connection.send(self._proxy_request())
@@ -108,7 +108,7 @@ parser.add_argument("url", type=str, action="store", help="URL to send request t
 parser.add_argument("-s", "--status-code", action="store_true", help="Pass option to have only the status code returned")
 parser.add_argument("--source", type=str, action="store", help="Souce host for proxy")
 parser.add_argument("-p", "--port", type=int, action="store", help="Destination port to communicate on")
-parser.add_argument("--dport", type=int, action="store", help="Source port for proxy")
+parser.add_argument("--source-port", type=int, action="store", help="Source port for proxy")
 parser.add_argument("-d", "--data", type=str, action="store", help="Data to send with the http request.")
 parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output while making request")
 parser.add_argument("-n", "--no-proxy", action="store_true", help="Send request without proxy protocol")
