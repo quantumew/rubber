@@ -10,11 +10,13 @@ This is a somewhat hacky script that wraps an http request in proxy protocol. I 
 rubber <verb> <url> [options]
 ```
 
-###Example
+###Examples
 
-```
-rubber GET http://test.com:8080/health --status-code
-```
+* Simple GET request that only returns the status code
+    * `./rubber GET http://test.com:8080/health --status-code`
+
+* Example of a PUT request with header and data that isn't wrapped in proxy protocol
+    * `./rubber PUT http://localhost:8080/artifact/hello-world -H "Authorization: 190a64931e6e49ccb9917c7f32a29d19" -d '{"value": "val", "immutable": "false"}' --no-proxy`
 
 ###positional arguments:
 *  VERB
