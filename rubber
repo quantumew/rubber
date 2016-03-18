@@ -16,7 +16,6 @@ import socket
 import ssl
 import json
 import ast
-import os
 
 SUPPORTED_VERBS = ["POST", "PUT", "GET", "DELETE"]
 
@@ -31,8 +30,7 @@ class ProxyProtocolWrapper(object):
         self.status_code = kwargs.get("status_code")
         self.headers = kwargs.get("headers")
 
-        if self.verb not in SUPPORTED_VERBS:
-            print "Unsupported verb used. Defaulting to GET."
+        if not self.verb or self.verb not in SUPPORTED_VERBS:
             self.verb = "GET"
 
     def _process_url(self, url, source=None, port=None, source_port=None):
@@ -77,12 +75,11 @@ class ProxyProtocolWrapper(object):
 
         self.connection = socket.create_connection((self.dest_host, self.port))
 
-        if self.url.scheme == "https":
-            self.connection = ssl.wrap_socket(self.connection)
-
         if self.send_proxy:
             self.connection.send(self._proxy_request())
 
+        if self.url.scheme == "https":
+            self.connection = ssl.wrap_socket(self.connection)
 
     def _build_request(self):
         data = ""
@@ -104,10 +101,10 @@ class ProxyProtocolWrapper(object):
     def request(self):
 
         self._connect()
-        self.connection.sendall(self._build_request())
+        self.connection.send(self._build_request())
 
         if self.data:
-            self.connection.sendall(json.dumps(ast.literal_eval(self.data)))
+            self.connection.send(json.dumps(ast.literal_eval(self.data)))
 
         response = ""
         while True:
@@ -125,7 +122,7 @@ class ProxyProtocolWrapper(object):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("verb", type=str, action="store", help="HTTP verb, Supported: GET, POST, PUT, and DELETE")
+parser.add_argument("-X", type=str, action="store", help="HTTP verb, Supported: GET, POST, PUT, and DELETE")
 parser.add_argument("url", type=str, action="store", help="URL to send request to")
 parser.add_argument("-s", "--status-code", action="store_true", help="Pass option to return only the status code")
 parser.add_argument("--source", type=str, action="store", help="Souce host for proxy")

@@ -13,18 +13,18 @@ rubber <verb> <url> [options]
 ###Examples
 
 * Simple GET request that only returns the status code
-    * `./rubber GET http://test.com:8080/health --status-code`
+    * `./rubber http://test.com:8080/health --status-code`
 
 * Example of a PUT request with header and data that isn't wrapped in proxy protocol
-    * `./rubber PUT http://localhost:8080/artifact/hello-world -H "Authorization: 190a64931e6e49ccb9917c7f32a29d19" -d '{"value": "val", "immutable": "false"}' --no-proxy`
+    * `./rubber http://localhost:8080/artifact/hello-world -X PUT -H "Authorization: 190a64931e6e49ccb9917c7f32a29d19" -d '{"value": "val", "immutable": "false"}' --no-proxy`
 
 ###positional arguments:
-*  VERB
-    * HTTP verb, Supported: GET, POST, PUT, and DELETE
 *  URL
     * URL to send request to
 
 ###optional arguments:
+* HTTP verb, Supported: GET, POST, PUT, and DELETE
+    * -X VERB
 *  Show help message and exit
     * -h | --help
 * Return only the http response status code
