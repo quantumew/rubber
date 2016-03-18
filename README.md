@@ -35,6 +35,8 @@ rubber GET http://test.com:8080/health --status-code
     * --source-port PORT
 * Data to send with HTTP request.
     * -d | --data DATA
+* Headers to send with HTTP request. Currently doesn't support multiple (like curl). Requires /r/n characters.
+    * -H | --headers HEADERS
 * Verbose output while making request
     * -v | --verbose
 * Send request without proxy protocol. WHY ARE YOU EVEN USING THIS SCRIPT LOL!!
