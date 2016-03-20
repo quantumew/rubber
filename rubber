@@ -7,7 +7,6 @@
 #
 #   ./rubber GET http://server:8080/health --status-code
 #
-#   TODO: Fix ssl issues and support multiple headers like curl (no need to add \r\n)
 #
 
 import argparse
