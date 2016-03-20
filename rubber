@@ -14,8 +14,6 @@ import argparse
 from urlparse import urlparse
 import socket
 import ssl
-import json
-import ast
 
 SUPPORTED_VERBS = ["POST", "PUT", "GET", "DELETE"]
 
@@ -104,7 +102,7 @@ class ProxyProtocolWrapper(object):
         self.connection.send(self._build_request())
 
         if self.data:
-            self.connection.send(json.dumps(ast.literal_eval(self.data)))
+            self.connection.send(self.data)
 
         response = ""
         while True:
