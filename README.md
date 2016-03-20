@@ -13,7 +13,7 @@ rubber <verb> <url> [options]
 ###Examples
 
 * Simple GET request that only returns the status code
-    * `./rubber http://test.com:8080/health --status-code`
+    * `./rubber https://test.com:8080/health --status-code`
 
 * Example of a PUT request with header and data that isn't wrapped in proxy protocol
     * `./rubber http://localhost:8080/artifact/hello-world -X PUT -H "Authorization: 190a64931e6e49ccb9917c7f32a29d19" -d '{"value": "val", "immutable": "false"}' --no-proxy`
@@ -37,9 +37,9 @@ rubber <verb> <url> [options]
     * --source-port PORT
 * Data to send with HTTP request.
     * -d | --data DATA
-* Headers to send with HTTP request. Currently doesn't support multiple (like curl). Requires /r/n characters.
+* Headers to send with HTTP request. Supports multiple headers as separate strings. Ex. -H "Host: google.com" "Authorization: blah"
     * -H | --headers HEADERS
-* Verbose output while making request
+* Outputs all content sent and received during the http request.
     * -v | --verbose
 * Send request without proxy protocol. WHY ARE YOU EVEN USING THIS SCRIPT LOL!!
     * -n | --no-proxy

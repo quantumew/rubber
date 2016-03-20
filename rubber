@@ -27,6 +27,7 @@ class ProxyProtocolWrapper(object):
         self.verb = kwargs.get("verb")
         self.status_code = kwargs.get("status_code")
         self.headers = kwargs.get("headers")
+        self.verbose_string = ""
 
         if not self.verb or self.verb not in SUPPORTED_VERBS:
             self.verb = "GET"
@@ -59,11 +60,13 @@ class ProxyProtocolWrapper(object):
                 port = scheme_port
         return port
 
-    def _proxy_request(self):
+    def _build_proxy_string(self):
         """ Generates the proxy protocol string """
 
         data = map(str, ("PROXY", "TCP4", self.source, self.dest_host, self.source_port, self.port))
-        return ' '.join(data) + '\r\n'
+        proxy = ' '.join(data) + '\r\n'
+        self.verbose_string += proxy
+        return proxy
 
     def _connect(self):
         """
@@ -74,26 +77,29 @@ class ProxyProtocolWrapper(object):
         self.connection = socket.create_connection((self.dest_host, self.port))
 
         if self.send_proxy:
-            self.connection.send(self._proxy_request())
+            self.connection.send(self._build_proxy_string())
 
         if self.url.scheme == "https":
             self.connection = ssl.wrap_socket(self.connection)
 
     def _build_request(self):
         data = ""
-        headers = ""
+        formatted_headers = ""
 
         if self.data:
             data = "Content-Type: application/json\r\n" \
                    "Content-Length: {0}\r\n".format(len(self.data))
 
         if self.headers:
-            headers = self.headers + "\r\n"
+            for header in self.headers:
+                formatted_headers += header + "\r\n"
 
         request = "{0} {1} HTTP/1.1\r\n" \
                   "Host: {2}\r\n" \
                   "Connection: close\r\n" \
-                  "{3}{4}\r\n".format(self.verb.upper(), self.path, self.dest_host, data, headers)
+                  "{3}{4}\r\n".format(self.verb.upper(), self.path, self.dest_host, data, formatted_headers)
+
+        self.verbose_string += request
         return request
 
     def request(self):
@@ -116,6 +122,9 @@ class ProxyProtocolWrapper(object):
         if self.status_code:
             response = response.split(" ")[1]
 
+        if self.verbose:
+            print self.verbose_string
+
         return response
 
 
@@ -126,8 +135,8 @@ parser.add_argument("-s", "--status-code", action="store_true", help="Pass optio
 parser.add_argument("--source", type=str, action="store", help="Souce host for proxy")
 parser.add_argument("-p", "--port", type=int, action="store", help="Destination port to communicate on")
 parser.add_argument("--source-port", type=int, action="store", help="Source port for proxy")
-parser.add_argument("-d", "--data", type=str, action="store", help="Data to send with the http request.")
-parser.add_argument("-H", "--headers", type=str, action="store", help="Headers to send with the http request.")
+parser.add_argument("-d", "--data", type=str, action="store", help="Data to send with the http request")
+parser.add_argument("-H", "--headers", type=str, nargs="+", action="store", help="Headers to send in http request")
 parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output while making request")
 parser.add_argument("-n", "--no-proxy", action="store_true", help="Send request without proxy protocol")
 args = vars(parser.parse_args())
