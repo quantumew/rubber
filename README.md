@@ -7,7 +7,7 @@ This is a somewhat hacky script that wraps an http request in proxy protocol. I 
 ## Usage
 
 ```
-rubber <verb> <url> [options]
+rubber <url> [options]
 ```
 
 ###Examples
