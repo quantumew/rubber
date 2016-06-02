@@ -5,7 +5,7 @@
 #   servers that require proxy protocol. Using [-s|--status-code] we will receive the response
 #   status code back. Ex:
 #
-#   ./rubber GET http://server:8080/health --status-code
+#   ./rubber http://server:8080/health -X GET --status-code
 #
 #
 
