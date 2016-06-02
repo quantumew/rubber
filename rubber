@@ -33,19 +33,27 @@ class ProxyProtocolWrapper(object):
 
     def _process_url(self, url, source=None, port=None, source_port=None):
         """ Processes source and destination host and port info. """
+        # Defaults to http if scheme doesn't exist
+        if not url.startswith("http"):
+            url = "http://{0}".format(url)
+
         self.url = urlparse(url)
         self.path = self.url.path
+
         if not self.path:
             self.path = "/"
         self.source_port = self._default_port(source_port)
         self.dest_host, self.port = self.url.netloc.partition(":")[::2]
+        self.dest_ip = socket.gethostbyname(self.dest_host)
 
         if not self.port:
             self.port = self._default_port(port)
         self.source = source
 
-        if not source:
-            self.source = "127.0.0.1"
+        if source:
+            self.source_ip = socket.gethostbyname(self.source)
+        else:
+            self.source_ip = "127.0.0.1"
 
     def _default_port(self, port=None):
         """ Defaults a port in order of priority. This makes using this tool more flexible. """
@@ -62,7 +70,7 @@ class ProxyProtocolWrapper(object):
     def _build_proxy_string(self):
         """ Generates the proxy protocol string """
 
-        data = map(str, ("PROXY", "TCP4", self.source, self.dest_host, self.source_port, self.port))
+        data = map(str, ("PROXY", "TCP4", self.source_ip, self.dest_ip, self.source_port, self.port))
         proxy = ' '.join(data) + '\r\n'
         self.verbose_string += proxy
         return proxy
