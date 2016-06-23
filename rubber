@@ -9,6 +9,7 @@
 #
 #
 
+# Didn't use docopt to avoid external dependencies.. very ugly
 import argparse
 from urlparse import urlparse
 import socket
@@ -141,7 +142,7 @@ usage_msg= """
 
 parser = argparse.ArgumentParser(usage=usage_msg)
 parser.add_argument("url", type=str, action="store", help="URL to send request to")
-parser.add_argument("-X", type=str, action="store", help="HTTP verb, Supported: GET, POST, PUT, and DELETE")
+parser.add_argument("-X", type=str, metavar="VERB", action="store", help="HTTP verb, Supported: GET, POST, PUT, and DELETE")
 parser.add_argument("-s", "--status-code", action="store_true", help="Pass option to return only the status code")
 parser.add_argument("--source", type=str, action="store", help="Souce host for proxy")
 parser.add_argument("-p", "--port", type=int, action="store", help="Destination port to communicate on")
