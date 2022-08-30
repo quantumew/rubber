@@ -11,7 +11,10 @@
 
 # Didn't use docopt to avoid external dependencies.. very ugly
 import argparse
-from urlparse import urlparse
+try:
+    from urlparse import urlparse
+except ImportError as err:
+    from urllib.parse import urlparse
 import socket
 import ssl
 
@@ -85,7 +88,7 @@ class ProxyProtocolWrapper(object):
         self.connection = socket.create_connection((self.dest_host, self.port))
 
         if self.send_proxy:
-            self.connection.send(self._build_proxy_string())
+            self.connection.send(self._build_proxy_string().encode())
 
         if self.url.scheme == "https":
             self.connection = ssl.wrap_socket(self.connection)
@@ -113,10 +116,10 @@ class ProxyProtocolWrapper(object):
     def request(self):
 
         self._connect()
-        self.connection.send(self._build_request())
+        self.connection.send(self._build_request().encode())
 
         if self.data:
-            self.connection.send(self.data)
+            self.connection.send(self.data.encode())
 
         response = ""
         while True:
@@ -124,14 +127,14 @@ class ProxyProtocolWrapper(object):
             if not part:
                 break
             else:
-                response += part
+                response += part.decode()
         self.connection.close()
 
         if self.status_code:
             response = response.split(" ")[1]
 
         if self.verbose:
-            print self.verbose_string
+            print(self.verbose_string)
 
         return response
 
@@ -154,4 +157,4 @@ parser.add_argument("-n", "--no-proxy", action="store_true", help="Send request 
 args = vars(parser.parse_args())
 
 proxy_wrapper = ProxyProtocolWrapper(**args)
-print proxy_wrapper.request()
+print(proxy_wrapper.request())
